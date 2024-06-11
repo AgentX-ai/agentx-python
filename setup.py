@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name="agentx-python",
-    version="0.1",
+    version="0.2.1",  # Update this version number each time you make a release
     packages=find_packages(),
     install_requires=[
         "urllib3>=1.26.11",
