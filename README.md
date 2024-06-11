@@ -18,7 +18,7 @@ You can get an API key from https://app.agentx.so
 
 ### Agent
 
-```
+```python
 from agentx_python import AgentX
 
 client = AgentX(api_key="<your api key here>")
@@ -31,7 +31,7 @@ print(client.list_agents())
 
 Each Conversation has `agents` and `users` tied to it.
 
-```
+```python
 # get agent
 my_agent = client.get_agent(id="<agent id here>")
 
@@ -43,7 +43,7 @@ print(my_agent.list_conversations())
 
 A `chat` needs to happen in the conversation. You can do `stream` response too, default `False`.
 
-```
+```python
 a_conversation = my_agent.get_conversation(id="<conversation id here>")
 
 response = a_conversation.chat("Hello, what is your name?", stream=True)
