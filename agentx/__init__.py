@@ -1,7 +1,7 @@
 import logging
 
-from agentx_python.agentx import AgentX
-from agentx_python.version import VERSION
+from agentx.agentx import AgentX
+from agentx.version import VERSION
 
 logging.basicConfig(
     level=logging.INFO,

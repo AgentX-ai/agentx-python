@@ -3,8 +3,8 @@ import requests
 import os
 import logging
 
-from agentx_python.util import get_headers
-from agentx_python.resources.agent import Agent
+from agentx.util import get_headers
+from agentx.resources.agent import Agent
 
 
 class AgentX:

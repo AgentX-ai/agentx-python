@@ -4,7 +4,7 @@ import requests
 import os
 import logging
 from dataclasses import dataclass
-from agentx_python.util import get_headers
+from agentx.util import get_headers
 from .conversation import Conversation
 
 
