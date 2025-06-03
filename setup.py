@@ -1,8 +1,25 @@
 from setuptools import setup, find_packages
 
+
+def get_version():
+    """Read version from version.py file"""
+    version_file = "agentx/version.py"
+    with open(version_file, "r", encoding="utf-8") as f:
+        for line in f:
+            if line.startswith("VERSION"):
+                return line.split("=")[1].strip().strip('"').strip("'")
+    raise RuntimeError("Unable to find version string.")
+
+
+def get_long_description():
+    """Read README.md file"""
+    with open("README.md", "r", encoding="utf-8") as f:
+        return f.read()
+
+
 setup(
     name="agentx-python",
-    version="0.3.3",  # Update this version number each time you make a release
+    version=get_version(),
     packages=find_packages(),
     install_requires=[
         "urllib3>=1.26.11",
@@ -10,8 +27,8 @@ setup(
     ],
     author="Robin Wang and AgentX Team",
     author_email="contact@agentx.so",
-    description="Offical Python SDK for AgentX (https://www.agentx.so/)",
-    long_description=open("README.md").read(),
+    description="Official Python SDK for AgentX (https://www.agentx.so/)",
+    long_description=get_long_description(),
     long_description_content_type="text/markdown",
     url="https://github.com/AgentX-ai/AgentX-python-sdk",
     classifiers=[

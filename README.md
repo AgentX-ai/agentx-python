@@ -17,6 +17,8 @@ Why build AI agent with AgentX?
 - Support all running MCP (model context protocol).
 - Support RAG with built-in re-rank.
 - Multi-agent workforce orchestration.
+- Multiple agents working together with a designated manager agent.
+- Cross vendor LLM orchestration.
 
 ## Installation
 
@@ -85,3 +87,50 @@ text=None cot=None botId='xxx'
 ```
 
 \*`cot` stands for chain-of-thoughts
+
+### Workforce
+
+A Workforce (team) consists of multiple agents working together with a designated manager agent.
+
+```python
+from agentx import AgentX
+
+client = AgentX(api_key="<your api key here>")
+
+# Get the list of workforces/teams you have
+workforces = client.list_workforces()
+print(workforces)
+
+# Get a specific workforce
+workforce = workforces[0]  # or any specific workforce
+print(f"Workforce: {workforce.name}")
+print(f"Manager: {workforce.manager.name}")
+print(f"Agents: {[agent.name for agent in workforce.agents]}")
+```
+
+#### Workforce Conversations
+
+```python
+# Create a new conversation with the workforce
+conversation = workforce.new_conversation()
+
+# List all existing conversations for the workforce
+conversations = workforce.list_conversations()
+print(conversations)
+```
+
+#### Chat with Workforce
+
+Chat with the entire workforce team and get streaming responses from all agents.
+
+```python
+# Stream chat with the workforce
+response = workforce.chat_stream(conversation.id, "How can you help me with this project?")
+for chunk in response:
+    if chunk.text:
+        print(chunk.text, end="")
+    if chunk.cot:
+        print(f" [COT: {chunk.cot}]")
+```
+
+The workforce chat allows you to leverage multiple specialized agents working together to provide comprehensive responses to your queries.

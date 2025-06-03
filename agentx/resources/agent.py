@@ -10,7 +10,7 @@ from .conversation import Conversation
 
 @dataclass
 class Agent(BaseModel):
-    id: str
+    id: str = Field(alias="_id")
     name: str
     avatar: Optional[str]
     createdAt: Optional[str]
