@@ -1,0 +1,96 @@
+name: Release to PyPI
+
+on:
+  push:
+    branches:
+      - main
+    paths-ignore:
+      - "agentx/version.py" # Prevent infinite loops
+  workflow_dispatch: # Allow manual triggering
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.9"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install build twine wheel packaging
+
+      - name: Bump version (only on main branch pushes)
+        id: bump
+        if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+        run: |
+          python -c "
+          import re
+          with open('agentx/version.py', 'r') as f:
+              content = f.read()
+          current_version = re.search(r'VERSION = \"([^\"]+)\"', content).group(1)
+          from packaging import version
+          v = version.parse(current_version)
+          new_version = f'{v.major}.{v.minor}.{v.micro + 1}'
+          new_content = content.replace(f'VERSION = \"{current_version}\"', f'VERSION = \"{new_version}\"')
+          with open('agentx/version.py', 'w') as f:
+              f.write(new_content)
+          print(f'new_version={new_version}')
+          print(f'Bumped version from {current_version} to {new_version}')
+          "
+
+      - name: Commit version bump
+        if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git add agentx/version.py
+          git commit -m "Bump version to ${{ steps.bump.outputs.new_version }} [skip ci]"
+          git push
+
+      - name: Wait for version bump commit
+        if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+        run: |
+          sleep 10  # Wait for the version bump commit to be processed
+
+      - name: Checkout latest code (to get version bump)
+        if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build package
+        run: |
+          python -m build
+
+      - name: Publish to PyPI
+        env:
+          TWINE_USERNAME: __token__
+          TWINE_PASSWORD: ${{ secrets.PYPI_API_TOKEN }}
+        run: |
+          python -m twine upload dist/*
+
+      - name: Create GitHub Release
+        if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: v${{ steps.bump.outputs.new_version }}
+          release_name: Release v${{ steps.bump.outputs.new_version }}
+          body: |
+            Automated release for version ${{ steps.bump.outputs.new_version }}
+
+            Changes in this release:
+            - Automated version bump
+            - PyPI package update
+          draft: false
+          prerelease: false
