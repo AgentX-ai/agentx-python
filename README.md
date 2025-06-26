@@ -26,6 +26,28 @@ Why build AI agent with AgentX?
 pip install --upgrade agentx-python
 ```
 
+## Quick Start
+
+Get started with AgentX in just a few lines of code:
+
+```python
+from agentx import AgentX
+
+# Initialize the client
+client = AgentX(api_key="your-api-key-here")
+
+# Get your agents
+agents = client.list_agents()
+print(f"You have {len(agents)} agents")
+
+# Start chatting with your first agent
+if agents:
+    agent = agents[0]
+    conversation = agent.new_conversation()
+    response = conversation.chat("Hello! What can you help me with?")
+    print(response)
+```
+
 ## Usage
 
 Provide an `api_key` inline or set `AGENTX_API_KEY` as an environment variable.
