@@ -8,6 +8,10 @@ on:
       - "agentx/version.py" # Prevent infinite loops
   workflow_dispatch: # Allow manual triggering
 
+permissions:
+  contents: write
+  packages: write
+
 jobs:
   release:
     runs-on: ubuntu-latest
