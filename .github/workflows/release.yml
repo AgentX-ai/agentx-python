@@ -33,6 +33,18 @@ jobs:
           python -m pip install --upgrade pip
           pip install build twine wheel packaging
 
+      - name: Get current version
+        id: current_version
+        if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+        run: |
+          python -c "
+          import re
+          with open('agentx/version.py', 'r') as f:
+              content = f.read()
+          current_version = re.search(r'VERSION = \"([^\"]+)\"', content).group(1)
+          print(f'current_version={current_version}')
+          " >> $GITHUB_OUTPUT
+
       - name: Bump version (only on main branch pushes)
         id: bump
         if: github.ref == 'refs/heads/main' && github.event_name == 'push'
@@ -49,43 +61,99 @@ jobs:
           with open('agentx/version.py', 'w') as f:
               f.write(new_content)
           print(f'Bumped version from {current_version} to {new_version}')
-          "
-
-      - name: Get new version
-        id: version
-        if: github.ref == 'refs/heads/main' && github.event_name == 'push'
-        run: |
-          python -c "
-          import re
-          with open('agentx/version.py', 'r') as f:
-              content = f.read()
-          new_version = re.search(r'VERSION = \"([^\"]+)\"', content).group(1)
           print(f'new_version={new_version}')
           " >> $GITHUB_OUTPUT
 
-      - name: Commit version bump
+      - name: Commit and push version bump
         if: github.ref == 'refs/heads/main' && github.event_name == 'push'
         run: |
           git config --local user.email "github-actions[bot]@users.noreply.github.com"
           git config --local user.name "github-actions[bot]"
           git add agentx/version.py
-          git commit -m "Bump version to ${{ steps.version.outputs.new_version }} [skip ci]"
-          git push
+          git commit -m "Bump version to ${{ steps.bump.outputs.new_version }} [skip ci]"
+          git push origin main
 
-      - name: Wait for version bump commit
+      - name: Wait for version bump to be available
         if: github.ref == 'refs/heads/main' && github.event_name == 'push'
         run: |
-          sleep 10  # Wait for the version bump commit to be processed
+          echo "Waiting for version bump commit to be available..."
+          sleep 30  # Increased wait time to ensure GitHub processes the push
 
-      - name: Checkout latest code (to get version bump)
-        if: github.ref == 'refs/heads/main' && github.event_name == 'push'
-        uses: actions/checkout@v4
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
+          # Verify the version bump was successful by checking out fresh
+          git fetch origin main
+          git checkout main
+          git pull origin main
+
+          # Verify the version was actually bumped
+          python -c "
+          import re
+          with open('agentx/version.py', 'r') as f:
+              content = f.read()
+          actual_version = re.search(r'VERSION = \"([^\"]+)\"', content).group(1)
+          expected_version = '${{ steps.bump.outputs.new_version }}'
+          if actual_version != expected_version:
+              print(f'ERROR: Version mismatch! Expected {expected_version}, got {actual_version}')
+              exit(1)
+          print(f'Version verification successful: {actual_version}')
+          "
 
       - name: Build package
         run: |
+          # Double-check we're using the correct version before building
+          python -c "
+          import re
+          with open('agentx/version.py', 'r') as f:
+              content = f.read()
+          version = re.search(r'VERSION = \"([^\"]+)\"', content).group(1)
+          print(f'Building package with version: {version}')
+          "
           python -m build
+
+      - name: Verify built package version
+        run: |
+          # Verify the built package has the correct version
+          python -c "
+          import tarfile
+          import os
+          import re
+
+          # Find the built package
+          dist_files = [f for f in os.listdir('dist') if f.endswith('.tar.gz')]
+          if not dist_files:
+              print('ERROR: No tar.gz package found in dist/')
+              exit(1)
+
+          package_file = dist_files[0]
+          print(f'Checking package: {package_file}')
+
+          # Extract and check version
+          with tarfile.open(f'dist/{package_file}', 'r:gz') as tar:
+              # Find the PKG-INFO file
+              pkg_info_files = [f for f in tar.getnames() if f.endswith('PKG-INFO')]
+              if pkg_info_files:
+                  pkg_info = tar.extractfile(pkg_info_files[0])
+                  content = pkg_info.read().decode('utf-8')
+                  version_match = re.search(r'Version: (.+)', content)
+                  if version_match:
+                      package_version = version_match.group(1)
+                      print(f'Package version: {package_version}')
+                      
+                      # Compare with expected version
+                      with open('agentx/version.py', 'r') as f:
+                          version_content = f.read()
+                      expected_version = re.search(r'VERSION = \"([^\"]+)\"', version_content).group(1)
+                      
+                      if package_version != expected_version:
+                          print(f'ERROR: Package version mismatch! Expected {expected_version}, got {package_version}')
+                          exit(1)
+                      print('Package version verification successful!')
+                  else:
+                      print('ERROR: Could not find version in PKG-INFO')
+                      exit(1)
+              else:
+                  print('ERROR: No PKG-INFO file found in package')
+                  exit(1)
+          "
 
       - name: Publish to PyPI
         env:
@@ -100,13 +168,13 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          tag_name: v${{ steps.version.outputs.new_version }}
-          release_name: Release v${{ steps.version.outputs.new_version }}
+          tag_name: v${{ steps.bump.outputs.new_version }}
+          release_name: Release v${{ steps.bump.outputs.new_version }}
           body: |
-            Automated release for version ${{ steps.version.outputs.new_version }}
+            Automated release for version ${{ steps.bump.outputs.new_version }}
 
             Changes in this release:
-            - Automated version bump
+            - Automated version bump from ${{ steps.current_version.outputs.current_version }} to ${{ steps.bump.outputs.new_version }}
             - PyPI package update
           draft: false
           prerelease: false

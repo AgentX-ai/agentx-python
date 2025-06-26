@@ -19,7 +19,7 @@ Why build AI agent with AgentX?
 - Multi-agent workforce orchestration.
 - Multiple agents working together with a designated manager agent.
 - Cross LLM vendor, multi-agent orchestration.
-- A2A - agent to agent protocol
+- A2A - agent to agent protocol (coming soon)
 
 ## Installation
 
