@@ -98,6 +98,16 @@ jobs:
           print(f'Version verification successful: {actual_version}')
           "
 
+      - name: Verify setup.py version
+        run: |
+          python -c "
+          import sys
+          sys.path.insert(0, '.')
+          from setup import get_version
+          version = get_version()
+          print(f'setup.py get_version() returns: {version}')
+          "
+
       - name: Build package
         run: |
           # Clean any previous builds
@@ -110,15 +120,6 @@ jobs:
               content = f.read()
           version = re.search(r'VERSION = \"([^\"]+)\"', content).group(1)
           print(f'Building package with version: {version}')
-          "
-
-          # Verify setup.py reads the correct version
-          python -c "
-          import sys
-          sys.path.insert(0, '.')
-          from setup import get_version
-          version = get_version()
-          print(f'setup.py get_version() returns: {version}')
           "
 
           python -m build
