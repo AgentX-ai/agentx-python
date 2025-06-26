@@ -24,6 +24,9 @@ setup(
     install_requires=[
         "urllib3>=1.26.11",
         "certifi",
+        "requests",
+        "pydantic",
+        "pydantic_core",
     ],
     author="Robin Wang and AgentX Team",
     author_email="contact@agentx.so",
