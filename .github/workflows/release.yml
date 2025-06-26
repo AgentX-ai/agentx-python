@@ -11,6 +11,7 @@ on:
 permissions:
   contents: write
   packages: write
+  id-token: write
 
 jobs:
   release:
@@ -54,8 +55,8 @@ jobs:
       - name: Commit version bump
         if: github.ref == 'refs/heads/main' && github.event_name == 'push'
         run: |
-          git config --local user.email "action@github.com"
-          git config --local user.name "GitHub Action"
+          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+          git config --local user.name "github-actions[bot]"
           git add agentx/version.py
           git commit -m "Bump version to ${{ steps.bump.outputs.new_version }} [skip ci]"
           git push
