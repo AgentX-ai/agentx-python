@@ -4,7 +4,7 @@
 
 ---
 
-## Fast way to build AI Agents and create agent workforce
+## a fast way to build AI Agents and create agent workforce
 
 The official AgentX Python SDK for [AgentX](https://www.agentx.so/)
 
@@ -18,7 +18,8 @@ Why build AI agent with AgentX?
 - Support RAG with built-in re-rank.
 - Multi-agent workforce orchestration.
 - Multiple agents working together with a designated manager agent.
-- Cross vendor LLM orchestration.
+- Cross LLM vendor, multi-agent orchestration.
+- A2A - agent to agent protocol
 
 ## Installation
 

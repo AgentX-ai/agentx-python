@@ -48,9 +48,20 @@ jobs:
           new_content = content.replace(f'VERSION = \"{current_version}\"', f'VERSION = \"{new_version}\"')
           with open('agentx/version.py', 'w') as f:
               f.write(new_content)
-          print(f'new_version={new_version}')
           print(f'Bumped version from {current_version} to {new_version}')
           "
+
+      - name: Get new version
+        id: version
+        if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+        run: |
+          python -c "
+          import re
+          with open('agentx/version.py', 'r') as f:
+              content = f.read()
+          new_version = re.search(r'VERSION = \"([^\"]+)\"', content).group(1)
+          print(f'new_version={new_version}')
+          " >> $GITHUB_OUTPUT
 
       - name: Commit version bump
         if: github.ref == 'refs/heads/main' && github.event_name == 'push'
@@ -58,7 +69,7 @@ jobs:
           git config --local user.email "github-actions[bot]@users.noreply.github.com"
           git config --local user.name "github-actions[bot]"
           git add agentx/version.py
-          git commit -m "Bump version to ${{ steps.bump.outputs.new_version }} [skip ci]"
+          git commit -m "Bump version to ${{ steps.version.outputs.new_version }} [skip ci]"
           git push
 
       - name: Wait for version bump commit
@@ -89,10 +100,10 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          tag_name: v${{ steps.bump.outputs.new_version }}
-          release_name: Release v${{ steps.bump.outputs.new_version }}
+          tag_name: v${{ steps.version.outputs.new_version }}
+          release_name: Release v${{ steps.version.outputs.new_version }}
           body: |
-            Automated release for version ${{ steps.bump.outputs.new_version }}
+            Automated release for version ${{ steps.version.outputs.new_version }}
 
             Changes in this release:
             - Automated version bump
