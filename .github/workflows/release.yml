@@ -62,7 +62,8 @@ jobs:
               f.write(new_content)
           print(f'Bumped version from {current_version} to {new_version}')
           print(f'new_version={new_version}')
-          " >> $GITHUB_OUTPUT
+          " | tee /tmp/version_output.txt
+          grep 'new_version=' /tmp/version_output.txt >> $GITHUB_OUTPUT
 
       - name: Commit and push version bump
         if: github.ref == 'refs/heads/main' && github.event_name == 'push'
